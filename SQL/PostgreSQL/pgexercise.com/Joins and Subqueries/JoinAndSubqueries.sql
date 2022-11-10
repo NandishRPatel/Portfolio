@@ -75,91 +75,68 @@ ORDER BY 1, 2;
 # Question 6
 
 /*
-How can you retrieve the details of facilities with ID 1 and 5? Try to do 
-it without using the OR operator.
+How can you produce a list of bookings on the day of 2012-09-14 which will 
+cost the member (or guest) more than $30? Remember that guests have 
+different costs to members (the listed costs are per half-hour 'slot'), and 
+the guest user is always ID 0. Include in your output the name of the 
+facility, the name of the member formatted as a single column, and the 
+cost. Order by descending cost, and do not use any subqueries.
 */
 
-SELECT *
-FROM cd.facilities
-WHERE facid IN (1,5)
-
+SELECT CONCAT(m.firstname, ' ', m.surname) member, f.name facility, 
+		CASE
+			WHEN m.memid = 0 THEN b.slots * f.guestcost
+			ELSE b.slots * f.membercost
+		END AS cost
+FROM cd.members m
+JOIN cd.bookings b
+ON m.memid = b.memid AND DATE(b.starttime) = '2012-09-14'
+JOIN cd.facilities f
+ON b.facid = f.facid
+WHERE (m.memid = 0 AND b.slots * f.guestcost > 30) OR 
+		(m.memid != 0 AND b.slots * f.membercost > 30)
+ORDER BY 3 DESC;
 
 # Question 7
 
 /*
-How can you produce a list of facilities, with each labelled as 'cheap' or 
-'expensive' depending on if their monthly maintenance cost is more than $100?
-Return the name and monthly maintenance of the facilities in question.
+How can you output a list of all members, including the individual who 
+recommended them (if any), without using any joins? Ensure that there are 
+no duplicates in the list, and that each firstname + surname pairing is 
+formatted as a column and ordered.
 */
 
-SELECT name, 
-			CASE 
-				WHEN monthlymaintenance > 100 THEN 'expensive'
-				WHEN monthlymaintenance < 100 THEN 'cheap'
-			END AS cost
-FROM cd.facilities
+SELECT DISTINCT CONCAT(m.firstname, ' ', m.surname) AS member, 
+		(
+		 SELECT CONCAT(m1.firstname, ' ', m1.surname) AS recommender 
+		 FROM cd.members m1 
+		 WHERE m1.memid = m.recommendedby
+		) 
+FROM cd.members m
+ORDER BY 1, 2;
 
 
 # Question 8
 
 /*
-How can you produce a list of members who joined after the start of 
-September 2012? Return the memid, surname, firstname, and joindate of the 
-members in question.
-*/
-
-SELECT memid, surname, firstname, joindate
-FROM cd.members
-WHERE joindate > '2012-09-01'
-
-
-# Question 9
-
-/*
-How can you produce an ordered list of the first 10 surnames in the members 
-table? The list must not contain duplicates.
-*/
-
-SELECT DISTINCT(surname)
-FROM cd.members
-ORDER BY surname
-LIMIT 10
-
-
-# Question 10
-
-/*
-You, for some reason, want a combined list of all surnames and all facility 
-names. Yes, this is a contrived example :-). Produce that list!
+Question 6 bookings exercise contained some messy logic: we had to calculate 
+the booking cost in both the WHERE clause and the CASE statement. Try to 
+simplify this calculation using subqueries.
 */
 
 SELECT * 
-FROM (
-	SELECT name FROM cd.facilities
-	UNION
-	SELECT surname AS name FROM cd.members
-	) sub
-
-
-# Question 11
-
-/*
-You'd like to get the signup date of your last member. How can you retrieve 
-this information?
-*/
-
-SELECT MAX(joindate) AS latest
-FROM cd.members;
-
-
-# Question 12
-
-/*
-You'd like to get the first and last name of the last member(s) who signed 
-up - not just the date. How can you do that?
-*/
-
-SELECT firstname, surname, joindate
-FROM cd.members
-ORDER BY 3 DESC
-LIMIT 1;
+FROM 
+   (
+	SELECT CONCAT(m.firstname, ' ', m.surname) member, f.name facility, 
+		  CASE
+			  WHEN m.memid = 0 THEN b.slots * f.guestcost
+			  ELSE b.slots * f.membercost
+		  END AS cost
+	FROM cd.members m
+	JOIN cd.bookings b
+	ON m.memid = b.memid AND DATE(b.starttime) = '2012-09-14'
+	JOIN cd.facilities f
+	ON b.facid = f.facid
+   ) sub
+   WHERE cost > 30
+   ORDER BY 3 DESC;
