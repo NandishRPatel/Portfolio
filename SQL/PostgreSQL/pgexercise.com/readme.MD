@@ -127,4 +127,6 @@ Table has more than 4000 rows so I am only displaying first 10 rows here.
 
 ## ERD
 
+(I hope you are not using a dark theme for your github)
+
 ![Entiry Relation Diagram](https://pgexercises.com/img/schema-horizontal.svg)
