@@ -123,3 +123,8 @@ Table has more than 4000 rows so I am only displaying first 10 rows here.
 | 7      | 0     | 2     | 2012-07-04 15:00:00 | 3     |
 | 8      | 4     | 3     | 2012-07-04 13:30:00 | 2     |
 | 9      | 4     | 0     | 2012-07-04 15:00:00 | 2     |
+
+
+## ERD
+
+![Entiry Relation Diagram](https://pgexercises.com/img/schema-horizontal.svg)
