@@ -269,3 +269,154 @@ FROM cd.bookings
 GROUP BY 1
   ) AS ranked
 WHERE rank = 1;
+
+
+# Question 18
+
+/*
+Produce a list of members (including guests), along 
+with the number of hours they've booked in facilities, 
+rounded to the nearest ten hours. Rank them by this 
+rounded figure, producing output of first name, 
+surname, rounded hours, rank. Sort by rank, surname, 
+and first name.
+*/
+
+SELECT *, RANK() OVER(ORDER BY hours DESC) AS rank
+FROM (
+  SELECT m.firstname, m.surname, ROUND(SUM(b.slots) * 0.5, -1) hours
+  FROM cd.members m
+  JOIN cd.bookings b
+  ON m.memid = b.memid
+  JOIN cd.facilities f
+  ON b.facid = f.facid
+  GROUP BY 1, 2
+  ) AS subq
+ ORDER BY 4, 2, 1;
+
+# Question 19
+
+/*
+Produce a list of the top three revenue generating 
+facilities (including ties). Output facility name and 
+rank, sorted by rank and facility name.
+*/
+
+SELECT name, RANK() OVER(ORDER BY revenue DESC)
+FROM (
+  SELECT f.name, 
+     SUM(CASE
+      WHEN b.memid = 0 THEN b.slots * f.guestcost
+    ELSE b.slots * f.membercost
+     END) as revenue
+  FROM cd.bookings b
+  JOIN cd.facilities f
+  ON b.facid = f.facid
+  GROUP BY 1) AS subq
+ORDER BY 2, 1
+LIMIT 3;
+
+/*Same facility could have same revenue so sense in
+using LIMIT 3. The following is better approach.*/
+
+SELECT *
+FROM (
+  SELECT f.name, RANK() OVER(ORDER BY SUM(CASE
+      WHEN b.memid = 0 THEN b.slots * f.guestcost
+      ELSE b.slots * f.membercost
+     END) DESC) AS rank
+  FROM cd.bookings b
+  JOIN cd.facilities f
+  ON b.facid = f.facid
+  GROUP BY 1) AS subq
+WHERE rank <= 3
+ORDER BY 2, 1;
+
+
+
+# Question 20
+
+/*
+Classify facilities into equally sized groups of 
+high, average, and low based on their revenue. Order 
+by classification and facility name.
+*/
+
+SELECT name, CASE
+        WHEN rank = 1 THEN 'high'
+        WHEN rank = 2 THEN 'average'
+        ELSE 'low'
+       END AS revenue
+FROM ( 
+  SELECT f.name, NTILE(3) OVER(
+                    ORDER BY SUM(
+                  CASE
+                    WHEN b.memid = 0 THEN b.slots * f.guestcost
+                    ELSE b.slots * f.membercost
+                  END
+                  ) DESC
+                               ) as rank
+    FROM cd.bookings b
+    JOIN cd.facilities f
+    ON b.facid = f.facid
+      GROUP BY 1
+  ) AS subq
+ORDER BY rank, name;
+
+# Question 21
+
+/*
+Based on the 3 complete months of data so far, 
+calculate the amount of time each facility will 
+take to repay its cost of ownership. Remember to 
+take into account ongoing monthly maintenance. 
+Output facility name and payback time in months, 
+order by facility name. Don't worry about differences 
+in month lengths, we're only looking for a rough 
+value here!
+*/
+
+SELECT name, initialoutlay/ABS(monthly_rev - monthlymaintenance) AS months
+FROM (
+  SELECT f.name, f.initialoutlay, f.monthlymaintenance, SUM(CASE
+        WHEN b.memid = 0 THEN b.slots * f.guestcost
+        ELSE b.slots * f.membercost
+         END)/3 AS monthly_rev
+  FROM cd.bookings b
+  JOIN cd.facilities f
+  ON b.facid = f.facid
+  GROUP BY f.facid
+  ) AS subq
+ORDER BY name;
+
+# Question 22
+
+/*
+For each day in August 2012, calculate a rolling 
+average of total revenue over the previous 15 days. 
+Output should contain date and revenue columns, 
+sorted by the date. Remember to account for the 
+possibility of a day having zero revenue.
+*/
+
+SELECT subq.date, 
+(
+  SELECT SUM(
+  CASE
+    WHEN b.memid = 0 THEN b.slots * f.guestcost
+    ELSE b.slots * f.membercost
+  END) as rev
+  FROM cd.bookings b
+  JOIN cd.facilities f
+  ON b.facid = f.facid
+  WHERE (b.starttime > subq.date - INTERVAL '14 days') AND
+    (b.starttime < subq.date + INTERVAL '1 day')
+)/15 AS revenue
+FROM 
+( 
+  SELECT CAST(GENERATE_SERIES(
+        '2012-08-01'::TIMESTAMP, 
+        '2012-08-31', 
+        '1 day') AS DATE) AS date
+) AS subq
+ORDER BY subq.date;
