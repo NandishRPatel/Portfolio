@@ -1,5 +1,6 @@
 # Introduction to Data used in the exercises
 ## These exercises were directly taken from https://pgexercises.com/
+### Thanks to [Alisdair Owens](https://alisdairowens.net/) for creating these amazing sets of exercises which not only introduced me to new concepts and ways to query but also inspired me to take a deep dive into SQL. Cheers, Mate!
 
 The dataset for these exercises is for a newly created country club, with a set of members, facilities such as tennis courts, and booking history for those facilities. Amongst other things, the club wants to understand how they can use their information to analyse facility usage/demand. 
 
