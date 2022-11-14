@@ -41,7 +41,7 @@ the facilities in question.
 
 SELECT facid, name, membercost, monthlymaintenance
 FROM cd.facilities
-WHERE membercost > 0 AND membercost < (monthlymaintenance/50)
+WHERE membercost > 0 AND membercost < (monthlymaintenance/50);
 
 
 # Question 5
@@ -53,7 +53,7 @@ their name?
 
 SELECT *
 FROM cd.facilities
-WHERE LOWER(name) LIKE '%tennis%'
+WHERE LOWER(name) LIKE '%tennis%';
 
 
 # Question 6
@@ -65,7 +65,7 @@ it without using the OR operator.
 
 SELECT *
 FROM cd.facilities
-WHERE facid IN (1,5)
+WHERE facid IN (1,5);
 
 
 # Question 7
@@ -81,7 +81,7 @@ SELECT name,
 				WHEN monthlymaintenance > 100 THEN 'expensive'
 				WHEN monthlymaintenance < 100 THEN 'cheap'
 			END AS cost
-FROM cd.facilities
+FROM cd.facilities;
 
 
 # Question 8
@@ -94,7 +94,7 @@ members in question.
 
 SELECT memid, surname, firstname, joindate
 FROM cd.members
-WHERE joindate > '2012-09-01'
+WHERE joindate > '2012-09-01';
 
 
 # Question 9
@@ -107,7 +107,7 @@ table? The list must not contain duplicates.
 SELECT DISTINCT(surname)
 FROM cd.members
 ORDER BY surname
-LIMIT 10
+LIMIT 10;
 
 
 # Question 10
@@ -122,7 +122,7 @@ FROM (
 	SELECT name FROM cd.facilities
 	UNION
 	SELECT surname AS name FROM cd.members
-	) sub
+) sub;
 
 
 # Question 11
