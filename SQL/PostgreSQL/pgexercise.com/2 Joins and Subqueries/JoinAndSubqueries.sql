@@ -137,6 +137,6 @@ FROM
 	ON m.memid = b.memid AND DATE(b.starttime) = '2012-09-14'
 	JOIN cd.facilities f
 	ON b.facid = f.facid
-   ) sub
+   ) AS sub
    WHERE cost > 30
    ORDER BY 3 DESC;
