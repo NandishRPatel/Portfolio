@@ -1,5 +1,5 @@
 # Introduction to Data used in the exercises
-## This exercises were directly taken from https://pgexercises.com/
+## These exercises were directly taken from https://pgexercises.com/
 
 The dataset for these exercises is for a newly created country club, with a set of members, facilities such as tennis courts, and booking history for those facilities. Amongst other things, the club wants to understand how they can use their information to analyse facility usage/demand. 
 
