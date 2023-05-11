@@ -121,3 +121,41 @@ WHERE s.score = d.score
 GROUP BY 1, 2
 HAVING COUNT(1) > 1
 ORDER BY COUNT(1) DESC, 1; 
+
+
+## 6. Contest Leaderboard
+
+/*
+URL - https://www.hackerrank.com/challenges/contest-leaderboard/problem
+
+The total score of a hacker is the sum of their 
+maximum scores for all of the challenges. Write 
+a query to print the hacker_id, name, and total 
+score of the hackers ordered by the descending 
+score. If more than one hacker achieved the same 
+total score, then sort the result by ascending 
+hacker_id. Exclude all hackers with a total score 
+of  from your result.
+*/
+
+
+SELECT h.hacker_id, h.name, t_sum_max_score.total_score
+FROM
+
+(
+    SELECT hacker_id, SUM(max_score) AS total_score
+    FROM
+    (
+        SELECT s.hacker_id, s.challenge_id, MAX(s.score) max_score
+        FROM submissions s
+        GROUP BY 1, 2
+    ) AS t_max_score
+    GROUP BY 1
+    HAVING SUM(max_score) > 0
+) AS t_sum_max_score
+
+JOIN hackers h
+	ON t_sum_max_score.hacker_id = h.hacker_id
+
+GROUP BY 1, 2
+ORDER BY 3 DESC, 1;
