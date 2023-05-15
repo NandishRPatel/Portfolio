@@ -159,3 +159,38 @@ JOIN hackers h
 
 GROUP BY 1, 2
 ORDER BY 3 DESC, 1;
+
+
+## 6. Draw The Triangle 1
+
+/*
+URL - https://www.hackerrank.com/challenges/draw-the-triangle-1/problem
+
+P(R) represents a pattern drawn by Julia in R rows. 
+The following pattern represents P(5):
+
+* * * * * 
+* * * * 
+* * * 
+* * 
+*
+Write a query to print the pattern P(20).
+*/
+
+WITH RECURSIVE decrement_cte(num) AS
+(
+    SELECT 20
+    
+    UNION ALL
+    
+    SELECT d.num - 1 FROM decrement_cte d 
+    WHERE d.num > 1
+)
+
+SELECT REPEAT('* ', subq.num)
+FROM (SELECT num FROM decrement_cte) AS subq;
+
+-- OR
+
+SELECT REPEAT('*',subq.cnt)
+FROM (SELECT generate_series(5, 1, -1) AS cnt) AS subq;
