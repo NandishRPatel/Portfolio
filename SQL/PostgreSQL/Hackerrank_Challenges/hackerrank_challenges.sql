@@ -201,7 +201,8 @@ FROM (SELECT generate_series(5, 1, -1) AS cnt) AS subq;
 /*
 URL - https://www.hackerrank.com/challenges/harry-potter-and-wands/problem
 
-Harry Potter and his friends are at Ollivander's with Ron, finally replacing Charlie's old broken wand.
+Harry Potter and his friends are at Ollivander's with Ron, finally 
+replacing Charlie's old broken wand.
 
 Hermione decides the best way to choose is by determining the minimum 
 number of gold galleons needed to buy each non-evil wand of high power 
@@ -224,3 +225,71 @@ WHERE wp.is_evil = 0 AND w.coins_needed =
     WHERE wp.age = wp1.age AND w.power = w1.power
 )
 ORDER BY power DESC, age DESC
+
+
+## 8. Challenges
+
+/*
+URL - https://www.hackerrank.com/challenges/challenges/problem
+
+Julia asked her students to create some coding challenges. Write a 
+query to print the hacker_id, name, and the total number of 
+challenges created by each student. Sort your results by the total 
+number of challenges in descending order. If more than one student 
+created the same number of challenges, then sort the result by 
+hacker_id. If more than one student created the same number of 
+challenges and the count is less than the maximum number of 
+challenges created, then exclude those students from the result.
+*/
+
+-- VERY POOR attempt
+
+WITH cte AS
+(
+    SELECT h.hacker_id, h.name, COUNT(*) AS num_challenges
+    FROM hackers h
+    JOIN challenges c
+        ON h.hacker_id = c.hacker_id
+    GROUP BY h.hacker_id, h.name
+)
+
+
+SELECT hacker_id, name, num_challenges
+FROM cte
+WHERE num_challenges = (SELECT MAX(num_challenges) FROM cte)
+
+UNION
+
+SELECT hacker_id, name, num_challenges
+FROM
+(SELECT hacker_id, name, num_challenges, COUNT(*) OVER (PARTITION BY num_challenges) cnt_cnt_challenges
+FROM cte) As subq
+WHERE cnt_cnt_challenges = 1
+ORDER BY 3 DESC, 1
+
+-- MUCH BETTER attempt
+
+WITH num_challenge AS
+(
+    SELECT h.hacker_id, COUNT(*) AS hacker_challenges
+    FROM hackers h
+    JOIN challenges c
+        ON h.hacker_id = c.hacker_id
+    GROUP BY h.hacker_id
+), 
+
+max_challenges AS
+(
+    SELECT nc.hacker_id, nc.hacker_challenges,
+            COUNT(*) OVER (PARTITION BY nc.hacker_challenges) AS num_num_challenges,
+            MAX(nc.hacker_challenges) OVER() AS max_challenges
+    FROM num_challenge nc
+)
+
+SELECT h.hacker_id, h.name, mc.hacker_challenges
+FROM hackers h
+JOIN max_challenges mc
+    ON h.hacker_id = mc.hacker_id
+WHERE mc.num_num_challenges = 1 OR 
+        mc.hacker_challenges = mc.max_challenges
+ORDER BY hacker_challenges DESC, hacker_id
