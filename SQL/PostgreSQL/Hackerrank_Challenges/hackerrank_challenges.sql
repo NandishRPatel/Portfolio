@@ -293,3 +293,40 @@ JOIN max_challenges mc
 WHERE mc.num_num_challenges = 1 OR 
         mc.hacker_challenges = mc.max_challenges
 ORDER BY hacker_challenges DESC, hacker_id
+
+
+## 9. Placements
+
+/*
+URL - https://www.hackerrank.com/challenges/placements/problem
+
+You are given three tables: Students, Friends and Packages. Students 
+contains two columns: ID and Name. Friends contains two columns: ID 
+and Friend_ID (ID of the ONLY best friend). Packages contains two 
+columns: ID and Salary (offered salary in $ thousands per month).
+
+*/
+
+
+SELECT s.name
+FROM
+(
+    SELECT subq1.pid, subq1.isalary, subq2.friend_id, subq2.fsalary 
+    FROM (
+        SELECT p.id pid, p.salary isalary
+        FROM packages p
+    ) AS subq1
+
+    JOIN (
+        SELECT f.id fid, f.friend_id, p.salary fsalary
+        FROM friends f
+        JOIN packages p
+            ON f.friend_id = p.id
+    ) AS subq2
+
+        ON subq1.pid = subq2.fid
+    WHERE isalary < fsalary
+) AS final
+JOIN students s
+    ON final.pid = s.id
+ORDER BY final.fsalary
