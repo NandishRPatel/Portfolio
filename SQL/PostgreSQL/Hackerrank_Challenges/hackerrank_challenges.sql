@@ -253,7 +253,6 @@ WITH cte AS
     GROUP BY h.hacker_id, h.name
 )
 
-
 SELECT hacker_id, name, num_challenges
 FROM cte
 WHERE num_challenges = (SELECT MAX(num_challenges) FROM cte)
@@ -262,10 +261,13 @@ UNION
 
 SELECT hacker_id, name, num_challenges
 FROM
-(SELECT hacker_id, name, num_challenges, COUNT(*) OVER (PARTITION BY num_challenges) cnt_cnt_challenges
-FROM cte) As subq
+(
+    SELECT hacker_id, name, num_challenges, 
+           COUNT(*) OVER (PARTITION BY num_challenges) cnt_cnt_challenges
+    FROM cte
+) As subq
 WHERE cnt_cnt_challenges = 1
-ORDER BY 3 DESC, 1
+ORDER BY num_challenges DESC, hacker_id
 
 -- MUCH BETTER attempt
 
@@ -330,3 +332,38 @@ FROM
 JOIN students s
     ON final.pid = s.id
 ORDER BY final.fsalary
+
+## 10. SQL Project Planning
+
+/*
+URL - https://www.hackerrank.com/challenges/sql-projects/problem
+
+Write a query to output the start and end dates 
+of projects listed by the number of days it took 
+to complete the project in ascending order. If 
+there is more than one project that have the same 
+number of completion days, then order by the 
+start date of the project.
+*/
+
+SELECT subq1.start_date, subq2.end_date
+FROM
+(
+    SELECT start_date, 
+           ROW_NUMBER() OVER (ORDER BY start_date) as row_num
+    FROM projects
+    WHERE start_date NOT IN (SELECT end_date FROM projects)
+) AS subq1
+
+JOIN
+
+(
+    SELECT end_date, 
+           ROW_NUMBER() OVER (ORDER BY end_date) as row_num
+    FROM projects
+    WHERE end_date NOT IN (SELECT start_date FROM projects)
+) AS subq2
+    
+    ON subq1.row_num = subq2.row_num
+
+ORDER BY DATEDIFF(subq2.end_date, subq1.start_date), subq1.start_date
