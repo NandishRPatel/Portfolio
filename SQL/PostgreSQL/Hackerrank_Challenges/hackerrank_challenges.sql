@@ -193,7 +193,7 @@ FROM (SELECT num FROM decrement_cte) AS subq;
 -- OR
 
 SELECT REPEAT('*',subq.cnt)
-FROM (SELECT generate_series(5, 1, -1) AS cnt) AS subq;
+FROM (SELECT generate_series(20, 1, -1) AS cnt) AS subq;
 
 
 ## 7. Ollivander's Inventory
@@ -391,3 +391,47 @@ GROUP BY t1.x, t1.y
 HAVING t1.x < t1.y OR 
        (t1.x = t1.y AND COUNT(t1.x) > 1)
 ORDER BY t1.x
+
+
+## 12. Prime Numbers
+
+/*
+URL - https://www.hackerrank.com/challenges/symmetric-pairs/problem
+
+Write a query to print all prime numbers less 
+than or equal to . Print your result on a single 
+line, and use the ampersand () character as your 
+separator (instead of a space).
+*/
+
+WITH RECURSIVE numbers(num) AS 
+(
+    SELECT 2
+    
+    UNION ALL
+    
+    SELECT n.num + 1
+    FROM numbers n
+    WHERE n.num < 1000
+)
+
+SELECT GROUP_CONCAT(subq.num SEPARATOR '&')
+FROM
+(
+    SELECT n.num
+    FROM numbers n
+    WHERE NOT EXISTS (
+      SELECT 1 FROM numbers n1
+      WHERE n.num > n1.num AND n.num % n1.num = 0
+    )
+)AS subq;
+
+
+-- OR
+
+SELECT seriesA.element AS primes 
+FROM generate_series(2, 20, 1) AS seriesA(element)
+LEFT JOIN generate_series(2, 20, 1) AS seriesB(element)
+    ON seriesA.element >= POWER(seriesB.element, 2) AND
+        seriesA.element % seriesB.element = 0
+WHERE seriesB IS NULL;
