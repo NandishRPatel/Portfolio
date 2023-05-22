@@ -8,37 +8,42 @@ Throughout the course, participants will gain hands-on experience working with r
 
 ## Course Syllabus
 
-### Introduction to SQL
+### 1. Introduction to SQL
 
-Overview of SQL and its importance in data analysis
-Introduction to relational databases and database management systems
-Writing basic SQL queries to retrieve and filter data
-SQL Joins and Table Relationships
+* Overview of SQL and its importance in data analysis
+* Introduction to relational databases and database management systems
+*Writing basic SQL queries to retrieve and filter data
+### 2. SQL Joins and Table Relationships
 
-Understanding table relationships: one-to-one, one-to-many, and many-to-many
-Performing inner joins, left joins, right joins, and full joins
-Using subqueries and derived tables to combine data from multiple tables
-Aggregating Data with SQL
+* Understanding table relationships: one-to-one, one-to-many, and many-to-many
+* Performing inner joins, left joins, right joins, and full joins
+* Using subqueries and derived tables to combine data from multiple tables
 
-Grouping data using GROUP BY and HAVING clauses
-Applying aggregate functions like SUM, AVG, COUNT, MIN, and MAX
-Using the ORDER BY clause to sort query results
-Advanced SQL Concepts
+### 3. Aggregating Data with SQL
 
-Working with complex queries using multiple joins and subqueries
-Utilizing SQL functions for string manipulation, date/time operations, and mathematical calculations
-Understanding window functions for advanced data analysis
-Data Cleaning and Preparation with SQL
+* Grouping data using GROUP BY and HAVING clauses
+* Applying aggregate functions like SUM, AVG, COUNT, MIN, and MAX
+* Using the ORDER BY clause to sort query results
 
-Handling missing data and NULL values
-Performing data transformations and data cleansing operations
-Applying data validation and integrity checks using constraints
-Putting It All Together: SQL for Data Analysis Projects
+### 4. Advanced SQL Concepts
 
-Applying SQL skills to real-world data analysis projects
-Analyzing complex datasets and deriving insights using SQL queries
-Presenting and visualizing data analysis results
-Course Completion
+* Working with complex queries using multiple joins and subqueries
+* Utilizing SQL functions for string manipulation, date/time operations, and mathematical calculations
+* Understanding window functions for advanced data analysis
+
+### 5. Data Cleaning and Preparation with SQL
+
+* Handling missing data and NULL values
+* Performing data transformations and data cleansing operations
+* Applying data validation and integrity checks using constraints
+
+### 6. Putting It All Together: SQL for Data Analysis Projects
+
+* Applying SQL skills to real-world data analysis projects
+* Analyzing complex datasets and deriving insights using SQL queries
+* Presenting and visualizing data analysis results
+
+## Course Completion
 Upon completing the "SQL for Data Analysis" course on Udacity, learners will have gained a solid foundation in SQL and the ability to leverage it for data analysis purposes. The course equips individuals with valuable skills that can be applied to various domains, including business analytics, data science, and database management.
 
-Feel free to explore the course and apply the knowledge gained in your own data analysis projects. Enjoy the learning journey!
+![Course Completion](./images/UDACITY_SQL_FINISH.png)
