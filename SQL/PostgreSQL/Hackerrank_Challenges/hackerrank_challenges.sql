@@ -435,3 +435,60 @@ LEFT JOIN generate_series(2, 20, 1) AS seriesB(element)
     ON seriesA.element >= POWER(seriesB.element, 2) AND
         seriesA.element % seriesB.element = 0
 WHERE seriesB IS NULL;
+
+
+## 13. Interviews
+
+/*
+URL - https://www.hackerrank.com/challenges/interviews/problem
+
+Samantha interviews many candidates from 
+different colleges using coding challenges and 
+contests. Write a query to print the contest_id, 
+hacker_id, name, and the sums of 
+total_submissions, total_accepted_submissions, 
+total_views, and total_unique_views for each 
+contest sorted by contest_id. Exclude the contest 
+from the result if all four sums are .
+
+Note: A specific contest can be used to screen 
+candidates at more than one college, but each 
+college only holds  screening contest.
+*/
+
+
+SELECT cts.contest_id, 
+       cts.hacker_id,
+       cts.name,
+       subq1.sum_total_submissions,
+       subq1.sum_total_accepted_submissions,
+       subq2.sum_total_views,
+       subq2.sum_total_unique_views
+FROM contests cts
+JOIN  ( 
+    SELECT clg.contest_id, 
+           sum(sbt.total_submissions) sum_total_submissions,
+           sum(sbt.total_accepted_submissions) sum_total_accepted_submissions
+    FROM colleges clg
+    JOIN challenges chlg 
+        ON chlg.college_id  = clg.college_id
+    JOIN submission_stats sbt
+        ON sbt.challenge_id = chlg.challenge_id
+    GROUP BY clg.contest_id
+) subq1
+    ON subq1.contest_id = cts.contest_id
+
+JOIN ( 
+    SELECT clg.contest_id, 
+           sum(vst.total_views) sum_total_views, 
+           sum(vst.total_unique_views) sum_total_unique_views
+    FROM colleges clg
+    JOIN challenges chlg 
+        ON chlg.college_id  = clg.college_id
+    JOIN view_stats vst
+        ON vst.challenge_id = chlg.challenge_id
+    GROUP BY clg.contest_id
+) subq2
+    ON subq2.contest_id = cts.contest_id
+GROUP BY cts.contest_id, cts.hacker_id, cts.name
+HAVING subq1.sum_total_submissions + subq2.sum_total_views > 0;
