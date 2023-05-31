@@ -1,0 +1,225 @@
+---
+title: "Online Retail"
+author: "Data Engineering Trooper"
+date: '`r format(Sys.time(), "%Y-%m-%d %H:%M")`'
+header-includes:
+- \usepackage{float} #use the 'float' package
+- \floatplacement{figure}{H} #make every figure with caption = h
+output:
+    html_document:
+        number_sections: true
+        self_contained: true
+        code_folding: show
+        toc: true
+        toc_float:
+            collapsed: true
+            smooth_scroll: false
+    pdf_document:
+        number_sections: true
+        toc: true
+        fig_cap: yes
+        keep_tex: yes
+urlcolor: blue
+---
+
+<style>
+body{
+font-size:14pt
+}
+
+.important{
+  background-color : lightblue; 
+  font-size:16pt
+}
+
+.backgrnd{
+background-color : red
+}
+</style>
+
+# Initial Setup
+
+This code chunk loads the necessary packages and sets up a connection with the database running on localhost.
+
+```{r setup, message = FALSE}
+# Loading packages
+library(RPostgres)
+library(DBI)
+
+# Setting up code chunks
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, error = TRUE)
+
+# Connecting to the database 'onlineretail' on localhost
+con <- dbConnect(
+  Postgres(),
+  dbname = 'onlineretail',
+  host = 'localhost',
+  port = 5432,
+  user = 'csde',
+  password = 'gis'
+)
+```
+
+# Explatory Analysis
+
+## Data Description
+
+Before we start with the analysis I'd like to thank you [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Online+Retail#) for providing the dataset.
+
+<p class = "important">This is a transnational data set which contains all the transactions occurring between 01/12/2010 and 09/12/2011 for a UK-based and registered non-store online retail. The company mainly sells unique all-occasion gifts. Many customers of the company are wholesalers.</p>
+
+
+Let's start with column names first and then describe what each column stands for. The following code chunk will print out column names for us.
+
+```{sql s1, connection = con}
+SELECT json_object_keys(
+         to_json(
+           json_populate_record(NULL::main_table, '{}'::JSON
+          )
+        )
+      ) AS column_names;
+```
+
+As we can see that the table has 8 columns as listed above. Now let's jot down what each column stands for.
+
+`InvoiceNo`: Invoice number. A 6-digit integral number uniquely assigned to each transaction. If this code starts with letter 'c', it indicates a cancellation.
+
+`StockCode`: Product (item) code. A 5-digit integral number uniquely assigned to each distinct product.
+
+`Description`: Product (item) name.
+
+`Quantity`: The quantities of each product (item) per transaction.
+
+`InvoiceDate`: Invoice Date and time. The day and time when each transaction was generated.
+
+`UnitPrice`: Unit price. Product price per unit in sterling.
+
+`CustomerID`: Customer number. A 5-digit integral number uniquely assigned to each customer.
+
+`Country`: Country name. The name of the country where each customer resides.
+
+## Data Exploration
+
+Let's have a look at what kind of data we are working with. We'll print first
+10 records.
+
+
+```{sql s2, connection = con}
+SELECT * 
+FROM main_table
+LIMIT 10;
+```
+
+From the output displayed above, it seems like everything is okay but
+let's deep dive into exploratory analysis.
+
+### Null Values
+
+As per [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Online+Retail#), there are no missing values present in the data. We'll go ahead and check for ourselves. 
+
+```{sql s3, connection = con}
+SELECT invoiceno
+FROM main_table
+WHERE invoiceno IS NULL;
+```
+
+```{sql s4, connection = con}
+SELECT stockcode
+FROM main_table
+WHERE stockcode IS NULL;
+```
+
+```{sql s5, connection = con}
+SELECT COUNT(*) AS null_rows
+FROM main_table
+WHERE description IS NULL;
+```
+
+```{sql s6, connection = con}
+SELECT quantity
+FROM main_table
+WHERE quantity IS NULL;
+```
+
+```{sql s7, connection = con}
+SELECT invoicedate
+FROM main_table
+WHERE invoicedate IS NULL;
+```
+
+```{sql s8, connection = con}
+SELECT unitprice
+FROM main_table
+WHERE unitprice IS NULL;
+```
+
+```{sql s9, connection = con}
+SELECT COUNT(*) AS null_rows
+FROM main_table
+WHERE customerid IS NULL;
+```
+
+```{sql s10, connection = con}
+SELECT country
+FROM main_table
+WHERE country IS NULL;
+```
+
+<br/>From the above outputs we can see that only `description` and `customerid` columns have missing values and the count is 10. Now let's see if they have missing values in the same rows or not.
+
+```{sql s11, connection = con}
+SELECT description, customerid
+FROM main_table
+WHERE description IS NULL;
+```
+
+
+<br/>From the above output we can see that their missing values are present in the same rows. Now let's examine the entire table where there are missing values present. 
+
+```{sql s12, connection = con}
+SELECT *
+FROM main_table
+WHERE description IS NULL;
+```
+
+<br/>After examining the table above we can observe following things:
+
+  * Several of the `quantity` values are in **negative**
+  * All of the `unitprice` values are `0`.
+  
+Based on all the information we have so far we can conclude that we should remove all the rows with the NULL values as they don't possess any value. So, we will create a new table which will only contain non-null rows. The database user doesn't have permissions to create new table, so I have run this query on localhost with admin access. 
+
+```{sql s13, connection = con, eval = FALSE}
+CREATE TABLE cleaned_data
+AS SELECT
+  *
+FROM main_table
+WHERE customerid IS NOT NULL
+```
+ 
+
+Now let's compare two tables below.
+
+```{sql s14, connection = con}
+SELECT 'Original Data', COUNT(*) AS number_of_rows
+FROM main_table
+
+UNION
+
+SELECT 'Cleaned Data', COUNT(*)
+FROM cleaned_data
+```
+
+```{sql s15, connection = con}
+SELECT COUNT(*)
+FROM cleaned_data
+```
+
+
+# Disconnecting Database
+
+Here, we are ending the connection made to the database since we are done with the analysis. 
+
+```{r disconnect}
+dbDisconnect(con)
+```
