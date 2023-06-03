@@ -50,7 +50,7 @@ library(DBI)
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, error = TRUE)
 
 # Connecting to the database 'onlineretail' on localhost
-con <- dbConnect(
+con <- DBI::dbConnect(
   Postgres(),
   dbname = 'onlineretail',
   host = 'localhost',
@@ -115,111 +115,136 @@ let's deep dive into exploratory analysis.
 
 ### Null Values
 
-As per [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Online+Retail#), there are no missing values present in the data. We'll go ahead and check for ourselves. 
+[UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Online+Retail#) didn't provide any details regarding the missing values so We'll go ahead and check for ourselves. 
 
-```{sql s3, connection = con}
-SELECT invoiceno
+We can use the following query to find out the missing values in the columns. 
+
+```{sql stmp_1, connection = con, eval=FALSE}
+SELECT COUNT(*) AS null_rows
+FROM table_name
+WHERE column_name IS NULL;
+```
+
+*Similar query can be used to find out missing values in other columns. Let's see the below table which contains all the information regarding missing values in the columns.*
+
+```{sql s3, connection = con, echo = F, output.var="ino_nulls"}
+SELECT COUNT(*) AS null_rows
 FROM main_table
 WHERE invoiceno IS NULL;
 ```
 
-```{sql s4, connection = con}
-SELECT stockcode
+```{sql s4, connection = con, echo = F, output.var="stkcode_nulls"}
+SELECT COUNT(*) AS null_rows
 FROM main_table
 WHERE stockcode IS NULL;
 ```
 
-```{sql s5, connection = con}
+```{sql s5, connection = con, output.var = "desc_nulls", echo=F}
 SELECT COUNT(*) AS null_rows
 FROM main_table
 WHERE description IS NULL;
 ```
 
-```{sql s6, connection = con}
-SELECT quantity
+```{sql stmp_2, connection = con, output.var = "total_rows", echo = F}
+SELECT COUNT(*)
+FROM main_table;
+```
+
+```{sql s6, connection = con, , echo = F, output.var="qnty_nulls"}
+SELECT COUNT(*) AS null_rows
 FROM main_table
 WHERE quantity IS NULL;
 ```
 
-```{sql s7, connection = con}
-SELECT invoicedate
+```{sql s7, connection = con, echo = F, output.var="idate_nulls"}
+SELECT COUNT(*) AS null_rows
 FROM main_table
 WHERE invoicedate IS NULL;
 ```
 
-```{sql s8, connection = con}
-SELECT unitprice
+```{sql s8, connection = con, echo = F, output.var="uprice_nulls"}
+SELECT COUNT(*) AS null_rows
 FROM main_table
 WHERE unitprice IS NULL;
 ```
 
-```{sql s9, connection = con}
+```{sql s9, connection = con, output.var = "cid_nulls", echo=F}
 SELECT COUNT(*) AS null_rows
 FROM main_table
 WHERE customerid IS NULL;
 ```
 
-```{sql s10, connection = con}
-SELECT country
+```{sql s10, connection = con, echo=FALSE, output.var="cntry_nulls"}
+SELECT COUNT(*) AS null_rows
 FROM main_table
 WHERE country IS NULL;
 ```
 
-<br/>From the above outputs we can see that only `description` and `customerid` columns have missing values and the count is 10. Now let's see if they have missing values in the same rows or not.
+
+```{r null_values, echo=FALSE, table.caption = "Null values"}
+# Missing values vector
+nulls <- c(ino_nulls, stkcode_nulls, desc_nulls, qnty_nulls, idate_nulls,
+           uprice_nulls, cid_nulls, cntry_nulls)
+
+# Value extraction for nulls
+nulls_values <- c()
+
+# Calculating the percentage of missing values
+percentOfMissingValues <- c()
+
+for(i in 1:length(nulls)) {   
+  tmp = (nulls[i]$null_rows * 100)/total_rows$count
+  nulls_values[i] <- format(nulls[i]$null_rows)
+  percentOfMissingValues[i] <- paste(format(round(tmp, 1)), "%")
+}
+
+null_df <- data.frame(
+  Columns = c("invoiceno", "stockcode", "description", "quantity",
+                  "invoicedate", "unitprice", "customerid", "country"),
+  "Null Values" = nulls_values,
+  "Percentage Of Null Values" = percentOfMissingValues,
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
+
+knitr::kable(null_df, caption = "Table 1 : Null values")
+```
+
+
+<br/><p class = "important">As we can see in the above table that except for `description` and `customerid`, the rest of the columns don't have missing values in them.</p> *The percentage of the missing values will be an important factor later on when it comes to deciding what to do with these missing values for example remove the records altogether or impute these records with some value which would make sense in such data space.* 
+
+
+### Dealing with Null Values
+
+  * The percentage of missing values in `description` is really low(*See Table 1 : Null values*) and `description` column won't hold much power in the analysis we will be conducting. We will be imputing the missing values with something really basic like "No description provided".
+
+  * The astounding number of rows with missing `customerid`((*See Table 1 : Null values*)) values is a big data quality problem but it also could be explained by proposing that these rows could represent **guest customers which didn't make an account or register on the platform** but such customers did used the platform to buy stuff. We can not simply remove all the records with missing values. We can impute them with something like `'11111'`(of course after checking whether that value already exists or not) which would represent guest customers on the platform.
+  
+  * One of the two problems I encountered while I was exploring the data was that 
+    1. some of the **records have** `unitprice` **with the value** `0`. Now, the `unitprice`(Product price per unit in sterling) shouldn't be `0` for any products. 
+    2. Several of the `quantity` values are **negative** which is not practical.
+
+Let's deal with above-mentioned problems using SQL. Before we make any changes, it is always a good idea not to change the original data source be it a table, a dataframe, or a file. So, let's first make a copy of the table and then do our data cleaning tasks on the copy.
 
 ```{sql s11, connection = con}
-SELECT description, customerid
+CREATE TABLE IF NOT EXISTS cleaned_data
+AS SELECT *
 FROM main_table
-WHERE description IS NULL;
 ```
 
 
-<br/>From the above output we can see that their missing values are present in the same rows. Now let's examine the entire table where there are missing values present. 
-
+  1. Let's change `description` of the records. 
 ```{sql s12, connection = con}
-SELECT *
-FROM main_table
-WHERE description IS NULL;
+-- Desc
 ```
 
-<br/>After examining the table above we can observe following things:
 
-  * Several of the `quantity` values are in **negative**
-  * All of the `unitprice` values are `0`.
-  
-Based on all the information we have so far we can conclude that we should remove all the rows with the NULL values as they don't possess any value. So, we will create a new table which will only contain non-null rows. The database user doesn't have permissions to create new table, so I have run this query on localhost with admin access. 
-
-```{sql s13, connection = con, eval = FALSE}
-CREATE TABLE cleaned_data
-AS SELECT
-  *
-FROM main_table
-WHERE customerid IS NOT NULL
-```
- 
-
-Now let's compare two tables below.
-
-```{sql s14, connection = con}
-SELECT 'Original Data', COUNT(*) AS number_of_rows
-FROM main_table
-
-UNION
-
-SELECT 'Cleaned Data', COUNT(*)
-FROM cleaned_data
-```
-
-```{sql s15, connection = con}
-SELECT COUNT(*)
-FROM cleaned_data
-```
 
 
 # Disconnecting Database
 
 Here, we are ending the connection made to the database since we are done with the analysis. 
 
-```{r disconnect}
-dbDisconnect(con)
+```{r dbdisconnect}
+DBI::dbDisconnect(con)
 ```

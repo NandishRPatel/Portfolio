@@ -1574,7 +1574,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Online Retail</h1>
 <h4 class="author">Data Engineering Trooper</h4>
-<h4 class="date">2023-06-01 05:46</h4>
+<h4 class="date">2023-06-03 21:57</h4>
 
 </div>
 
@@ -1602,7 +1602,7 @@ library(DBI)
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, error = TRUE)
 
 # Connecting to the database &#39;onlineretail&#39; on localhost
-con &lt;- dbConnect(
+con &lt;- DBI::dbConnect(
   Postgres(),
   dbname = &#39;onlineretail&#39;,
   host = &#39;localhost&#39;,
@@ -1827,393 +1827,121 @@ LIMIT 10;</code></pre>
 let’s deep dive into exploratory analysis.</p>
 <div id="null-values" class="section level3" number="2.2.1">
 <h3><span class="header-section-number">2.2.1</span> Null Values</h3>
-<p>As per <a href="https://archive.ics.uci.edu/ml/datasets/Online+Retail#">UCI
-Machine Learning Repository</a>, there are no missing values present in
-the data. We’ll go ahead and check for ourselves.</p>
-<pre class="sql"><code>SELECT invoiceno
-FROM main_table
-WHERE invoiceno IS NULL;</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>0 records</caption>
-<thead>
-<tr class="header">
-<th align="left">invoiceno</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-</div>
-<pre class="sql"><code>SELECT stockcode
-FROM main_table
-WHERE stockcode IS NULL;</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>0 records</caption>
-<thead>
-<tr class="header">
-<th align="left">stockcode</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-</div>
+<p><a href="https://archive.ics.uci.edu/ml/datasets/Online+Retail#">UCI
+Machine Learning Repository</a> didn’t provide any details regarding the
+missing values so We’ll go ahead and check for ourselves.</p>
+<p>We can use the following query to find out the missing values in the
+columns.</p>
 <pre class="sql"><code>SELECT COUNT(*) AS null_rows
-FROM main_table
-WHERE description IS NULL;</code></pre>
-<div class="knitsql-table">
+FROM table_name
+WHERE column_name IS NULL;</code></pre>
+<p><em>Similar query can be used to find out missing values in other
+columns. Let’s see the below table which contains all the information
+regarding missing values in the columns.</em></p>
 <table>
-<caption>1 records</caption>
+<caption>Table 1 : Null values</caption>
 <thead>
 <tr class="header">
-<th align="right">null_rows</th>
+<th align="left">Columns</th>
+<th align="left">Null Values</th>
+<th align="left">Percentage Of Null Values</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">1454</td>
+<td align="left">invoiceno</td>
+<td align="left">0</td>
+<td align="left">0 %</td>
+</tr>
+<tr class="even">
+<td align="left">stockcode</td>
+<td align="left">0</td>
+<td align="left">0 %</td>
+</tr>
+<tr class="odd">
+<td align="left">description</td>
+<td align="left">1454</td>
+<td align="left">0.3 %</td>
+</tr>
+<tr class="even">
+<td align="left">quantity</td>
+<td align="left">0</td>
+<td align="left">0 %</td>
+</tr>
+<tr class="odd">
+<td align="left">invoicedate</td>
+<td align="left">0</td>
+<td align="left">0 %</td>
+</tr>
+<tr class="even">
+<td align="left">unitprice</td>
+<td align="left">0</td>
+<td align="left">0 %</td>
+</tr>
+<tr class="odd">
+<td align="left">customerid</td>
+<td align="left">135080</td>
+<td align="left">24.9 %</td>
+</tr>
+<tr class="even">
+<td align="left">country</td>
+<td align="left">0</td>
+<td align="left">0 %</td>
 </tr>
 </tbody>
 </table>
+<br />
+<p class="important">
+As we can see in the above table that except for
+<code>description</code> and <code>customerid</code>, the rest of the
+columns don’t have missing values in them.
+</p>
+<p><em>The percentage of the missing values will be an important factor
+later on when it comes to deciding what to do with these missing values
+for example remove the records altogether or impute these records with
+some value which would make sense in such data space.</em></p>
 </div>
-<pre class="sql"><code>SELECT quantity
-FROM main_table
-WHERE quantity IS NULL;</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>0 records</caption>
-<thead>
-<tr class="header">
-<th align="right">quantity</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-</div>
-<pre class="sql"><code>SELECT invoicedate
-FROM main_table
-WHERE invoicedate IS NULL;</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>0 records</caption>
-<thead>
-<tr class="header">
-<th align="left">invoicedate</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-</div>
-<pre class="sql"><code>SELECT unitprice
-FROM main_table
-WHERE unitprice IS NULL;</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>0 records</caption>
-<thead>
-<tr class="header">
-<th align="right">unitprice</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-</div>
-<pre class="sql"><code>SELECT COUNT(*) AS null_rows
-FROM main_table
-WHERE customerid IS NULL;</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>1 records</caption>
-<thead>
-<tr class="header">
-<th align="right">null_rows</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="right">135080</td>
-</tr>
-</tbody>
-</table>
-</div>
-<pre class="sql"><code>SELECT country
-FROM main_table
-WHERE country IS NULL;</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>0 records</caption>
-<thead>
-<tr class="header">
-<th align="left">country</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-</div>
-<p><br />From the above outputs we can see that only
-<code>description</code> and <code>customerid</code> columns have
-missing values and the count is 10. Now let’s see if they have missing
-values in the same rows or not.</p>
-<pre class="sql"><code>SELECT description, customerid
-FROM main_table
-WHERE description IS NULL;</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>Displaying records 1 - 10</caption>
-<thead>
-<tr class="header">
-<th align="left">description</th>
-<th align="left">customerid</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="even">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="odd">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="even">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="odd">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="even">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="odd">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="even">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="odd">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-<tr class="even">
-<td align="left">NA</td>
-<td align="left">NA</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><br />From the above output we can see that their missing values are
-present in the same rows. Now let’s examine the entire table where there
-are missing values present.</p>
-<pre class="sql"><code>SELECT *
-FROM main_table
-WHERE description IS NULL;</code></pre>
-<div class="knitsql-table">
-<table style="width:100%;">
-<caption>Displaying records 1 - 10</caption>
-<colgroup>
-<col width="10%" />
-<col width="10%" />
-<col width="12%" />
-<col width="9%" />
-<col width="17%" />
-<col width="10%" />
-<col width="11%" />
-<col width="16%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="left">invoiceno</th>
-<th align="left">stockcode</th>
-<th align="left">description</th>
-<th align="right">quantity</th>
-<th align="left">invoicedate</th>
-<th align="right">unitprice</th>
-<th align="left">customerid</th>
-<th align="left">country</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">536414</td>
-<td align="left">22139</td>
-<td align="left">NA</td>
-<td align="right">56</td>
-<td align="left">12/1/2010 11:52</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="even">
-<td align="left">537004</td>
-<td align="left">21814</td>
-<td align="left">NA</td>
-<td align="right">-30</td>
-<td align="left">12/3/2010 15:34</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="odd">
-<td align="left">537005</td>
-<td align="left">21692</td>
-<td align="left">NA</td>
-<td align="right">-70</td>
-<td align="left">12/3/2010 15:35</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="even">
-<td align="left">537006</td>
-<td align="left">21648</td>
-<td align="left">NA</td>
-<td align="right">-130</td>
-<td align="left">12/3/2010 15:36</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="odd">
-<td align="left">537007</td>
-<td align="left">21172</td>
-<td align="left">NA</td>
-<td align="right">-80</td>
-<td align="left">12/3/2010 15:36</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="even">
-<td align="left">536545</td>
-<td align="left">21134</td>
-<td align="left">NA</td>
-<td align="right">1</td>
-<td align="left">12/1/2010 14:32</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="odd">
-<td align="left">536546</td>
-<td align="left">22145</td>
-<td align="left">NA</td>
-<td align="right">1</td>
-<td align="left">12/1/2010 14:33</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="even">
-<td align="left">536547</td>
-<td align="left">37509</td>
-<td align="left">NA</td>
-<td align="right">1</td>
-<td align="left">12/1/2010 14:33</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="odd">
-<td align="left">536549</td>
-<td align="left">85226A</td>
-<td align="left">NA</td>
-<td align="right">1</td>
-<td align="left">12/1/2010 14:34</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-<tr class="even">
-<td align="left">536550</td>
-<td align="left">85044</td>
-<td align="left">NA</td>
-<td align="right">1</td>
-<td align="left">12/1/2010 14:34</td>
-<td align="right">0</td>
-<td align="left">NA</td>
-<td align="left">United Kingdom</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><br />After examining the table above we can observe following
-things:</p>
+<div id="dealing-with-null-values" class="section level3" number="2.2.2">
+<h3><span class="header-section-number">2.2.2</span> Dealing with Null
+Values</h3>
 <ul>
-<li>Several of the <code>quantity</code> values are in
-<strong>negative</strong></li>
-<li>All of the <code>unitprice</code> values are <code>0</code>.</li>
+<li><p>The percentage of missing values in <code>description</code> is
+really low(<em>See Table 1 : Null values</em>) and
+<code>description</code> column won’t hold much power in the analysis we
+will be conducting. We will be imputing the missing values with
+something really basic like “No description provided”.</p></li>
+<li><p>The astounding number of rows with missing
+<code>customerid</code>((<em>See Table 1 : Null values</em>)) values is
+a big data quality problem but it also could be explained by proposing
+that these rows could represent <strong>guest customers which didn’t
+make an account or register on the platform</strong> but such customers
+did used the platform to buy stuff. We can not simply remove all the
+records with missing values. We can impute them with something like
+<code>&#39;11111&#39;</code>(of course after checking whether that value already
+exists or not) which would represent guest customers on the
+platform.</p></li>
+<li><p>One of the two problems I encountered while I was exploring the
+data was that</p>
+<ol style="list-style-type: decimal">
+<li>some of the <strong>records have</strong> <code>unitprice</code>
+<strong>with the value</strong> <code>0</code>. Now, the
+<code>unitprice</code>(Product price per unit in sterling) shouldn’t be
+<code>0</code> for any products.</li>
+<li>Several of the <code>quantity</code> values are
+<strong>negative</strong> which is not practical.</li>
+</ol></li>
 </ul>
-<p>Based on all the information we have so far we can conclude that we
-should remove all the rows with the NULL values as they don’t possess
-any value. So, we will create a new table which will only contain
-non-null rows. The database user doesn’t have permissions to create new
-table, so I have run this query on localhost with admin access.</p>
-<pre class="sql"><code>CREATE TABLE cleaned_data
-AS SELECT
-  *
-FROM main_table
-WHERE customerid IS NOT NULL</code></pre>
-<p>Now let’s compare two tables below.</p>
-<pre class="sql"><code>SELECT &#39;Original Data&#39;, COUNT(*) AS number_of_rows
-FROM main_table
-
-UNION
-
-SELECT &#39;Cleaned Data&#39;, COUNT(*)
-FROM cleaned_data</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>2 records</caption>
-<thead>
-<tr class="header">
-<th align="left">?column?</th>
-<th align="right">number_of_rows</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">Cleaned Data</td>
-<td align="right">406829</td>
-</tr>
-<tr class="even">
-<td align="left">Original Data</td>
-<td align="right">541909</td>
-</tr>
-</tbody>
-</table>
-</div>
-<pre class="sql"><code>SELECT COUNT(*)
-FROM cleaned_data</code></pre>
-<div class="knitsql-table">
-<table>
-<caption>1 records</caption>
-<thead>
-<tr class="header">
-<th align="right">count</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="right">406829</td>
-</tr>
-</tbody>
-</table>
-</div>
+<p>Let’s deal with above-mentioned problems using SQL. Before we make
+any changes, it is always a good idea not to change the original data
+source be it a table, a dataframe, or a file. So, let’s first make a
+copy of the table and then do our data cleaning tasks on the copy.</p>
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS cleaned_data
+AS SELECT *
+FROM main_table</code></pre>
+<ol style="list-style-type: decimal">
+<li>Let’s change <code>description</code> of the records.</li>
+</ol>
+<pre class="sql"><code>-- Desc</code></pre>
 </div>
 </div>
 </div>
@@ -2222,7 +1950,7 @@ FROM cleaned_data</code></pre>
 Database</h1>
 <p>Here, we are ending the connection made to the database since we are
 done with the analysis.</p>
-<pre class="r"><code>dbDisconnect(con)</code></pre>
+<pre class="r"><code>DBI::dbDisconnect(con)</code></pre>
 </div>
 
 
