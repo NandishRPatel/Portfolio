@@ -232,14 +232,40 @@ AS SELECT *
 FROM main_table
 ```
 
+Let's handle the data cleaning task column by column starting with `description`.
 
-  1. Let's change `description` of the records. 
+<ol>
+<li>`description` <br/>
+<ul>
+<li>Let's first impute the missing values in the columns.</li>
+
 ```{sql s12, connection = con}
--- Desc
+UPDATE cleaned_data
+SET description = 'No Description Provided'
+WHERE description IS NULL
 ```
 
+<li> Let's check if there are any missing values lefts in the `description` column. </li>
 
+```{sql s13, connection = con}
+SELECT COUNT(*) AS null_rows
+FROM cleaned_data
+WHERE description IS NULL
+```
 
+<li>Also, we'll check by comparing the count of 'No Description Provided' with Null count we got in *Table 1 : Null Values*.</li>
+  
+```{sql s14, connection = con}
+SELECT COUNT(*) AS count_new_value
+FROM cleaned_data
+WHERE description = 'No Description Provided'
+```
+
+<p class = "important">From the above results, we can conclude that there are no missing values present in the column and all the missing values have been imputed successfully. </p>
+
+</ul>
+<li>`customerid`</li>
+</ol>
 
 # Disconnecting Database
 

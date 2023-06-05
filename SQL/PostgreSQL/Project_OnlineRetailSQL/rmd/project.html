@@ -1574,7 +1574,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Online Retail</h1>
 <h4 class="author">Data Engineering Trooper</h4>
-<h4 class="date">2023-06-03 21:57</h4>
+<h4 class="date">2023-06-06 04:33</h4>
 
 </div>
 
@@ -1938,10 +1938,72 @@ copy of the table and then do our data cleaning tasks on the copy.</p>
 <pre class="sql"><code>CREATE TABLE IF NOT EXISTS cleaned_data
 AS SELECT *
 FROM main_table</code></pre>
-<ol style="list-style-type: decimal">
-<li>Let’s change <code>description</code> of the records.</li>
+<p>Let’s handle the data cleaning task column by column starting with
+<code>description</code>.</p>
+<ol>
+<li>
+<code>description</code> <br />
+<ul>
+<li>
+Let’s first impute the missing values in the columns.
+</li>
+<pre class="sql"><code>UPDATE cleaned_data
+SET description = &#39;No Description Provided&#39;
+WHERE description IS NULL</code></pre>
+<li>
+Let’s check if there are any missing values lefts in the
+<code>description</code> column.
+</li>
+<pre class="sql"><code>SELECT COUNT(*) AS null_rows
+FROM cleaned_data
+WHERE description IS NULL</code></pre>
+<div class="knitsql-table">
+<table>
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th align="right">null_rows</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<li>
+Also, we’ll check by comparing the count of ‘No Description Provided’
+with Null count we got in <em>Table 1 : Null Values</em>.
+</li>
+<pre class="sql"><code>SELECT COUNT(*) AS count_new_value
+FROM cleaned_data
+WHERE description = &#39;No Description Provided&#39;</code></pre>
+<div class="knitsql-table">
+<table>
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th align="right">count_new_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1454</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="important">
+From the above results, we can conclude that there are no missing values
+present in the column and all the missing values have been imputed
+successfully.
+</p>
+</ul>
+<li>
+<code>customerid</code>
+</li>
 </ol>
-<pre class="sql"><code>-- Desc</code></pre>
 </div>
 </div>
 </div>
