@@ -1574,7 +1574,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Online Retail</h1>
 <h4 class="author">Data Engineering Trooper</h4>
-<h4 class="date">2023-06-06 04:33</h4>
+<h4 class="date">2023-06-07 04:55</h4>
 
 </div>
 
@@ -1917,13 +1917,13 @@ that these rows could represent <strong>guest customers which didn’t
 make an account or register on the platform</strong> but such customers
 did used the platform to buy stuff. We can not simply remove all the
 records with missing values. We can impute them with something like
-<code>&#39;11111&#39;</code>(of course after checking whether that value already
-exists or not) which would represent guest customers on the
-platform.</p></li>
-<li><p>One of the two problems I encountered while I was exploring the
-data was that</p>
+<code>&#39;11111&#39;</code> or <code>&#39;GUEST&#39;</code>(<em>of course after
+checking whether that value already exists or not</em>) which would
+represent guest customers on the platform.</p></li>
+<li><p>Two problems I encountered while I was exploring the data was
+that</p>
 <ol style="list-style-type: decimal">
-<li>some of the <strong>records have</strong> <code>unitprice</code>
+<li>Some of the <strong>records have</strong> <code>unitprice</code>
 <strong>with the value</strong> <code>0</code>. Now, the
 <code>unitprice</code>(Product price per unit in sterling) shouldn’t be
 <code>0</code> for any products.</li>
@@ -1942,7 +1942,9 @@ FROM main_table</code></pre>
 <code>description</code>.</p>
 <ol>
 <li>
-<code>description</code> <br />
+<code>description</code>
+</li>
+<br />
 <ul>
 <li>
 Let’s first impute the missing values in the columns.
@@ -1999,10 +2001,177 @@ From the above results, we can conclude that there are no missing values
 present in the column and all the missing values have been imputed
 successfully.
 </p>
+<p><br /></p>
 </ul>
 <li>
 <code>customerid</code>
 </li>
+<br /> As we have seen above that almost 25% of the rows have missing
+values in <code>customerid</code>. The best thing to do here would be to
+impute them with some default value. One of the reasons behind this is
+inclusion these rows(which is a huge piece of data) in data analysis.
+Also, the imputing of the default value could help discover patterns in
+the data. So, let’s go ahead and fix <code>customerid</code> column.
+<ul>
+<li>
+First check the existing values present in <code>customerid</code>.
+</li>
+<pre class="sql"><code>SELECT customerid, COUNT(*) counts
+FROM cleaned_data
+GROUP BY customerid
+ORDER BY counts DESC</code></pre>
+<div class="knitsql-table">
+<table>
+<caption>Displaying records 1 - 10</caption>
+<thead>
+<tr class="header">
+<th align="left">customerid</th>
+<th align="right">counts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">guest</td>
+<td align="right">135080</td>
+</tr>
+<tr class="even">
+<td align="left">17841</td>
+<td align="right">7983</td>
+</tr>
+<tr class="odd">
+<td align="left">14911</td>
+<td align="right">5903</td>
+</tr>
+<tr class="even">
+<td align="left">14096</td>
+<td align="right">5128</td>
+</tr>
+<tr class="odd">
+<td align="left">12748</td>
+<td align="right">4642</td>
+</tr>
+<tr class="even">
+<td align="left">14606</td>
+<td align="right">2782</td>
+</tr>
+<tr class="odd">
+<td align="left">15311</td>
+<td align="right">2491</td>
+</tr>
+<tr class="even">
+<td align="left">14646</td>
+<td align="right">2085</td>
+</tr>
+<tr class="odd">
+<td align="left">13089</td>
+<td align="right">1857</td>
+</tr>
+<tr class="even">
+<td align="left">13263</td>
+<td align="right">1677</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Again, we can see that <code>135080</code> rows have missing values
+which we have already said could represent guest customers visiting the
+platform. Let’s change the <code>customerid</code> of said rows to
+<code>GUEST</code>.</p>
+<li>
+Changing the value of <code>customerid</code> to <code>GUEST</code>.
+</li>
+<pre class="sql"><code>UPDATE cleaned_data
+SET customerid = &#39;guest&#39; 
+WHERE customerid IS NULL</code></pre>
+<li>
+Let’s check the distribution of the values in <code>customerid</code>.
+</li>
+<pre class="sql"><code>SELECT customerid, COUNT(*) counts
+FROM cleaned_data
+GROUP BY customerid
+ORDER BY counts DESC</code></pre>
+<div class="knitsql-table">
+<table>
+<caption>Displaying records 1 - 10</caption>
+<thead>
+<tr class="header">
+<th align="left">customerid</th>
+<th align="right">counts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">guest</td>
+<td align="right">135080</td>
+</tr>
+<tr class="even">
+<td align="left">17841</td>
+<td align="right">7983</td>
+</tr>
+<tr class="odd">
+<td align="left">14911</td>
+<td align="right">5903</td>
+</tr>
+<tr class="even">
+<td align="left">14096</td>
+<td align="right">5128</td>
+</tr>
+<tr class="odd">
+<td align="left">12748</td>
+<td align="right">4642</td>
+</tr>
+<tr class="even">
+<td align="left">14606</td>
+<td align="right">2782</td>
+</tr>
+<tr class="odd">
+<td align="left">15311</td>
+<td align="right">2491</td>
+</tr>
+<tr class="even">
+<td align="left">14646</td>
+<td align="right">2085</td>
+</tr>
+<tr class="odd">
+<td align="left">13089</td>
+<td align="right">1857</td>
+</tr>
+<tr class="even">
+<td align="left">13263</td>
+<td align="right">1677</td>
+</tr>
+</tbody>
+</table>
+</div>
+</ul>
+<p><br /></p>
+<li>
+<code>unitprice</code>
+</li>
+<br />
+<ul>
+<li>
+Let’s explore the values of <code>unitprice</code>
+</li>
+<pre class="sql"><code>SELECT COUNT(*) AS neg_zero_counts
+FROM cleaned_data
+WHERE unitprice &lt;= 0</code></pre>
+<div class="knitsql-table">
+<table>
+<caption>1 records</caption>
+<thead>
+<tr class="header">
+<th align="right">neg_zero_counts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2517</td>
+</tr>
+</tbody>
+</table>
+</div>
+</ul>
 </ol>
 </div>
 </div>

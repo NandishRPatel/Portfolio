@@ -218,10 +218,10 @@ knitr::kable(null_df, caption = "Table 1 : Null values")
 
   * The percentage of missing values in `description` is really low(*See Table 1 : Null values*) and `description` column won't hold much power in the analysis we will be conducting. We will be imputing the missing values with something really basic like "No description provided".
 
-  * The astounding number of rows with missing `customerid`((*See Table 1 : Null values*)) values is a big data quality problem but it also could be explained by proposing that these rows could represent **guest customers which didn't make an account or register on the platform** but such customers did used the platform to buy stuff. We can not simply remove all the records with missing values. We can impute them with something like `'11111'`(of course after checking whether that value already exists or not) which would represent guest customers on the platform.
+  * The astounding number of rows with missing `customerid`((*See Table 1 : Null values*)) values is a big data quality problem but it also could be explained by proposing that these rows could represent **guest customers which didn't make an account or register on the platform** but such customers did used the platform to buy stuff. We can not simply remove all the records with missing values. We can impute them with something like `'11111'`  or `'GUEST'`(*of course after checking whether that value already exists or not*) which would represent guest customers on the platform.
   
-  * One of the two problems I encountered while I was exploring the data was that 
-    1. some of the **records have** `unitprice` **with the value** `0`. Now, the `unitprice`(Product price per unit in sterling) shouldn't be `0` for any products. 
+  * Two problems I encountered while I was exploring the data was that 
+    1. Some of the **records have** `unitprice` **with the value** `0`. Now, the `unitprice`(Product price per unit in sterling) shouldn't be `0` for any products. 
     2. Several of the `quantity` values are **negative** which is not practical.
 
 Let's deal with above-mentioned problems using SQL. Before we make any changes, it is always a good idea not to change the original data source be it a table, a dataframe, or a file. So, let's first make a copy of the table and then do our data cleaning tasks on the copy.
@@ -235,7 +235,8 @@ FROM main_table
 Let's handle the data cleaning task column by column starting with `description`.
 
 <ol>
-<li>`description` <br/>
+<li>`description`</li> 
+<br/>
 <ul>
 <li>Let's first impute the missing values in the columns.</li>
 
@@ -263,8 +264,60 @@ WHERE description = 'No Description Provided'
 
 <p class = "important">From the above results, we can conclude that there are no missing values present in the column and all the missing values have been imputed successfully. </p>
 
+<br/>
+
 </ul>
 <li>`customerid`</li>
+<br/>
+As we have seen above that almost 25% of the rows have missing values in `customerid`. The best thing to do here would be to impute them with some default value. One of the reasons behind this is inclusion these rows(which is a huge piece of data) in data analysis. Also, the imputing of the default value could help discover patterns in the data. So, let's go ahead and fix `customerid` column.
+<ul>
+<li>First check the existing values present in `customerid`.</li>
+
+```{sql s15, connection = con}
+SELECT customerid, COUNT(*) counts
+FROM cleaned_data
+GROUP BY customerid
+ORDER BY counts DESC
+```
+
+Again, we can see that `135080` rows have missing values which we have already said could represent guest customers visiting the platform. Let's change the `customerid` of said rows to `GUEST`.
+
+<li>Changing the value of `customerid` to `GUEST`.</li>
+
+```{sql s16, connection = con}
+UPDATE cleaned_data
+SET customerid = 'guest' 
+WHERE customerid IS NULL
+```
+
+<li>Let's check the distribution of the values in `customerid`.</li>
+
+```{sql s17, connection = con}
+SELECT customerid, COUNT(*) counts
+FROM cleaned_data
+GROUP BY customerid
+ORDER BY counts DESC
+```
+
+</ul>
+
+<br/>
+
+<li>`unitprice`</li>
+<br/>
+<ul>
+<li>Let's explore the values of `unitprice`</li>
+
+```{sql s18, connection = con}
+SELECT COUNT(*) AS neg_zero_counts
+FROM cleaned_data
+WHERE unitprice <= 0
+```
+
+
+
+
+</ul>
 </ol>
 
 # Disconnecting Database
